@@ -1,0 +1,72 @@
+#include <linux/fs.h>
+#include <linux/path.h>
+#include <linux/dcache.h>
+#include <linux/types.h>
+
+BEGIN
+{
+	printf("%-17s %-8s %-12s %-12s %-6s %s\n", "TIMESTAMP", "PID", "COMM", "FUNC", "LAT (ns)", "FILE");
+}
+
+/* Only need to trace openat
+* From: https://github.com/iovisor/bpftrace/blob/master/docs/tutorial_one_liners.md
+* Note: In modern Linux systems (glibc >= 2.26) the open wrapper always calls the openat
+*/
+
+tracepoint:syscalls:sys_enter_openat
+/ comm != "snmpd" && comm != "tmux" && comm != "ps" && comm != "ls" && comm != "htop"/
+{
+    @start[tid] = nsecs;
+	@func[tid] = "openat";
+	@filename[tid] = args->filename;
+}
+
+tracepoint:syscalls:sys_exit_openat
+/@filename[tid]/
+{
+	//printf("%lu %d %s %s %d %s\n",
+	printf("%-17lu %-8d %-12s %-12s %-6d %s\n",
+		nsecs,
+		pid,
+		comm,
+		@func[tid],
+		(nsecs - @start[tid]),
+		str(@filename[tid])
+	);
+
+	delete(@start[tid]);
+	delete(@filename[tid]);
+}
+
+kprobe:vfs_open
+/comm != "snmpd" && comm != "tmux" && comm != "ps" && comm != "ls" && comm != "htop"/
+{
+	@vstart[tid] = nsecs;
+	@vfilename[tid] = ((struct path *)arg0)->dentry->d_name.name;
+}
+
+kretprobe:vfs_open
+/@vfilename[tid]/
+{
+	//printf("%lu %d %s %s %d %s\n",
+	printf("%-17lu %-8d %-12s %-12s %-6d %s\n",
+		 nsecs,
+		 pid,
+		 comm,
+		 "vfs_open",
+		 (nsecs - @vstart[tid]),
+		 str(@vfilename[tid])
+	 );
+
+	 delete(@vstart[tid]);
+	 delete(@vfilename[tid]);
+}
+
+END 
+{
+	clear(@start);
+	clear(@filename);
+	
+	clear(@vstart);
+	clear(@vfilename);
+}

@@ -1,0 +1,74 @@
+#!/usr/bin/env bpftrace
+#include <linux/blkdev.h>
+#include <linux/blk_types.h>
+
+/*
+ * biosnoop.bt   Block I/O tracing tool, showing per I/O latency.
+ *               For Linux, uses bpftrace, eBPF.
+ *
+ * TODO: switch to block tracepoints. Add device, offset, and size columns.
+ *
+ * This is a bpftrace version of the bcc tool of the same name.
+ *
+ * 15-Nov-2017	Brendan Gregg	Created this.
+ */
+
+BEGIN
+{
+	printf("%-18s %-16s %-8s %-16s %-8s %-8s ", "TIMESTAMP", "COMM", "PID", "CALLER?", "CALLING PID", "DISK");
+	printf("%-1s %-12s %-8s %7s\n", "T", "SECTOR", "BYTES", "LAT(ns)");
+}
+
+kprobe:blk_account_io_start
+{
+	@start[arg0] = nsecs;
+	@iopid[arg0] = pid;
+	@iocomm[arg0] = comm;
+	@disk[arg0] = ((struct request *)arg0)->rq_disk->disk_name;
+	@rw[arg0] = (((struct request *)arg0)->cmd_flags & REQ_OP_MASK) == 1 ? "W" : "R";
+	@sector[arg0] = ((struct request *)arg0)->__sector;
+	@len[arg0] =  ((struct request *)arg0)->__data_len;
+}
+
+kprobe:blk_account_io_done
+/@start[arg0] != 0 && @iopid[arg0] != 0 && @iocomm[arg0] != ""/
+//@start[arg0] != 0/
+{
+	$now = nsecs;
+	// For tracing, minimize size
+	//printf("%lu %-16s %-8d %-16s %-8d %-8s ",	    
+	printf("%lu %s %d %s %d %s ",	    
+	// For pretty printing
+	//printf("%-18lu %-16s %-8d %-8s %-1s %-12llu ",	    
+		$now, 
+		@iocomm[arg0], 
+		@iopid[arg0], 
+		comm,
+		pid,
+		@disk[arg0] 
+		//@rw[arg0], 
+		//@sector[arg0]
+		);
+
+	printf("%s %llu %u %d\n", @rw[arg0], @sector[arg0], @len[arg0], ($now - @start[arg0]));
+	//printf("%-1s %-12llu %u %d\n", @rw[arg0], @sector[arg0], @len[arg0], ($now - @start[arg0]));
+
+	delete(@start[arg0]);
+	delete(@iopid[arg0]);
+	delete(@iocomm[arg0]);
+	delete(@disk[arg0]);
+	delete(@rw[arg0]);
+	delete(@sector[arg0]);
+	delete(@len[arg0]);
+}
+
+END
+{
+	clear(@start);
+	clear(@iopid);
+	clear(@iocomm);
+	clear(@disk);
+	clear(@rw);
+	clear(@sector);
+	clear(@len);
+}
