@@ -1,6 +1,5 @@
 #!/usr/bin/env bpftrace
 #include <linux/blkdev.h>
-#include <linux/blk_types.h>
 
 /*
  * biosnoop.bt   Block I/O tracing tool, showing per I/O latency.
@@ -25,7 +24,8 @@ kprobe:blk_account_io_start
 	@iopid[arg0] = pid;
 	@iocomm[arg0] = comm;
 	@disk[arg0] = ((struct request *)arg0)->rq_disk->disk_name;
-	@rw[arg0] = (((struct request *)arg0)->cmd_flags & REQ_OP_MASK) == 1 ? "W" : "R";
+	@rw[arg0] = (((struct request *)arg0)->cmd_flags & 255);
+	//@rw[arg0] = (((struct request *)arg0)->cmd_flags & REQ_OP_MASK) == 1 ? "W" : "R";
 	@sector[arg0] = ((struct request *)arg0)->__sector;
 	@len[arg0] =  ((struct request *)arg0)->__data_len;
 }
@@ -50,7 +50,7 @@ kprobe:blk_account_io_done
 		//@sector[arg0]
 		);
 
-	printf("%s %llu %u %d\n", @rw[arg0], @sector[arg0], @len[arg0], ($now - @start[arg0]));
+	printf("%d %llu %u %d\n", @rw[arg0], @sector[arg0], @len[arg0], ($now - @start[arg0]));
 	//printf("%-1s %-12llu %u %d\n", @rw[arg0], @sector[arg0], @len[arg0], ($now - @start[arg0]));
 
 	delete(@start[arg0]);

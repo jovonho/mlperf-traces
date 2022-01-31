@@ -1,10 +1,21 @@
 #!/bin/bash
 
-mkdir /data/MLIO/output/
-sudo bpftrace -o /data/MLIO/output/bio.out ./trace_bio.bt &
+if [ $# -eq 0 ]
+then
+    output_dir="./output"
+else
+    output_dir=$1
+fi
+
+if [ ! -d $output_dir ] 
+then
+    mkdir -p $output_dir
+fi
+
+sudo bpftrace -o "$output_dir/bio.out" ./trace_bio.bt &
 echo $!
-sudo bpftrace -o /data/MLIO/output/vfs_rw.out ./trace_vfs_rw.bt &
+sudo bpftrace -o "$output_dir/vfs_rw.out" ./trace_vfs_rw.bt &
 echo $!
-sudo bpftrace -o /data/MLIO/output/open.out ./trace_open.bt &
+sudo bpftrace -o "$output_dir/open.out" ./trace_open.bt &
 echo $!
 
