@@ -36,8 +36,8 @@ kprobe:blk_account_io_done
 {
 	$now = nsecs;
 	// For tracing, minimize size
-	//printf("%lu %-16s %-8d %-16s %-8d %-8s ",	    
-	printf("%lu %s %d %s %d %s ",	    
+	printf("%-18lu %-16s %-8d %-16s %-8d %-8s ",	    
+	//printf("%lu %s %d %s %d %s ",	    
 	// For pretty printing
 	//printf("%-18lu %-16s %-8d %-8s %-1s %-12llu ",	    
 		$now, 
@@ -50,8 +50,8 @@ kprobe:blk_account_io_done
 		//@sector[arg0]
 		);
 
-	printf("%s %llu %u %d\n", @rw[arg0], @sector[arg0], @len[arg0], ($now - @start[arg0]));
-	//printf("%-1s %-12llu %u %d\n", @rw[arg0], @sector[arg0], @len[arg0], ($now - @start[arg0]));
+	//printf("%s %llu %u %d\n", @rw[arg0], @sector[arg0], @len[arg0], ($now - @start[arg0]));
+	printf("%-1s %-12llu %u %d\n", @rw[arg0], @sector[arg0], @len[arg0], ($now - @start[arg0]));
 
 	delete(@start[arg0]);
 	delete(@iopid[arg0]);

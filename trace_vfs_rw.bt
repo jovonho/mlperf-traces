@@ -28,8 +28,8 @@ kretprobe:vfs_read
 	$now = nsecs;
 	
 	// One line for pretty printing, one line for minimizing output size
-	printf("%lu %d %s %s %d %d ", 
-	//printf("%-18lu %-6d %-16s %-16s %-8d %-10d ", 
+	//printf("%lu %d %s %s %d %d ", 
+	printf("%-18lu %-6d %-16s %-16s %-8d %-10d ", 
 		$now, 
 		pid,
 		comm,
@@ -37,8 +37,8 @@ kretprobe:vfs_read
 		$now - @start[tid],
 		@req[tid]);
 
-	printf("%d %s\n", retval, @filename[tid]);
-	//printf("%-10d %s\n", retval, @filename[tid]);
+	//printf("%d %s\n", retval, @filename[tid]);
+	printf("%-10d %s\n", retval, @filename[tid]);
 
 	delete(@start[tid]);
 	delete(@req[tid]);
@@ -62,8 +62,8 @@ kretprobe:vfs_write
 {
     $now = nsecs;
 	
-	printf("%lu %d %s %s %d %d ",
-	//printf("%-18lu %-6d %-16s %-16s %-8d %-10d ",
+	//printf("%lu %d %s %s %d %d ",
+	printf("%-18lu %-6d %-16s %-16s %-8d %-10d ",
 		$now,
 		pid,
 		comm,
@@ -71,8 +71,8 @@ kretprobe:vfs_write
 		$now - @wstart[tid],
 		@wreq[tid]);
 
-	printf("%d %s\n", retval, @wfilename[tid]);
-	//printf("%-10d %s\n", retval, @wfilename[tid]);
+	//printf("%d %s\n", retval, @wfilename[tid]);
+	printf("%-10d %s\n", retval, @wfilename[tid]);
 
 	delete(@wstart[tid]);
 	delete(@wreq[tid]);
