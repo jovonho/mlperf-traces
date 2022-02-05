@@ -16,7 +16,7 @@
 BEGIN
 {
 	printf("%-17s %-16s %-8s %-16s %-8s %-8s ", "TIMESTAMP", "COMM", "PID", "CALLER?", "CALLPID", "DISK");
-	printf("%-1s %-12s %-12s %s\n", "T", "SECTOR", "BYTES", "LAT(ns)");
+	printf("%-12s %-12s %-12s %s\n", "T", "SECTOR", "BYTES", "LAT(ns)");
 }
 
 kprobe:blk_account_io_start
@@ -26,7 +26,7 @@ kprobe:blk_account_io_start
 	@iopid[arg0] = pid;
 	@iocomm[arg0] = comm;
 	@disk[arg0] = ((struct request *)arg0)->rq_disk->disk_name;
-	@rw[arg0] = ((((struct request *)arg0)->cmd_flags) & 255);
+	@rw[arg0] = ((((struct request *)arg0)->cmd_flags));
 	//@rw[arg0] = ((((struct request *)arg0)->cmd_flags) & 255) == 1 ? "W" : "R";
 	//@rw[arg0] = (((struct request *)arg0)->cmd_flags & ((1 << REQ_OP_BITS) - 1)) == 1 ? "W" : "R";
 	@sector[arg0] = ((struct request *)arg0)->__sector;
@@ -54,7 +54,7 @@ kprobe:blk_account_io_done
 		);
 
 	//printf("%d %llu %u %d\n", @rw[arg0], @sector[arg0], @len[arg0], ($now - @start[arg0]));
-	printf("%-1d %-12llu %-12u %d\n", @rw[arg0], @sector[arg0], @len[arg0], ($now - @start[arg0]));
+	printf("%-12d %-12llu %-12u %d\n", @rw[arg0], @sector[arg0], @len[arg0], ($now - @start[arg0]));
 
 	delete(@start[arg0]);
 	delete(@iopid[arg0]);

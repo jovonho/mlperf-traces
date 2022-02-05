@@ -9,7 +9,3 @@ tmux send-keys -t training "bash run_and_time.sh 1" C-m
 
 exit 0
 
-#send control C to session to kill training
-tmux send-keys -t training C-c
-tmux kill-session -t training
-
