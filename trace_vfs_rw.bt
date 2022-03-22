@@ -14,7 +14,7 @@ BEGIN
 }
 
 kprobe:vfs_read
-/comm != "ps" && comm != "nvsm_core" &&  comm != "dpkg" && comm != "irqbalance" && comm != "smartctl" && comm != "nvidia-smi" && comm != "sshd" && comm != "bpftrace" && comm != "top" && comm != "mosquitto" && comm != "ipmitool" && comm != "head" && comm != "lspci" && comm != "snmpd" && comm != "tmux" && comm != "df" && comm != "ls" && comm != "htop"/
+/ comm == "python"/
 {
 	@start[tid] = nsecs;
 	@req[tid] = arg2;
@@ -49,7 +49,7 @@ kretprobe:vfs_read
 
 
 kprobe:vfs_write
-/ comm != "nvsm_core" && comm != "dpkg" && comm != "irqbalance" && comm != "smartctl" && comm != "nvidia-smi" && comm != "sshd" && comm != "bpftrace" && comm != "top" && comm != "mosquitto" && comm != "ipmitool" && comm != "head" && comm != "lspci" && comm != "snmpd" && comm != "tmux" && comm != "df" && comm != "ls" && comm != "htop"/
+/ comm == "python"/
 {
     @wstart[tid] = nsecs;
 	@wreq[tid] = arg2;

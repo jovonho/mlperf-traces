@@ -15,7 +15,7 @@ BEGIN
 */
 
 tracepoint:syscalls:sys_enter_openat
-/ comm != "nvidia-smi" && comm != "nvsm_core" && comm != "bpftrace" && comm != "irqbalance" &&  comm != "top" && comm != "mosquitto" && comm != "ipmitool" && comm != "head" && comm != "lspci" && comm != "snmpd" && comm != "tmux" && comm != "ps" && comm != "ls" && comm != "htop"/
+/ comm == "python" /
 {
     @start[tid] = nsecs;
 	@func[tid] = "openat";
@@ -42,7 +42,7 @@ tracepoint:syscalls:sys_exit_openat
 }
 
 kprobe:vfs_open
-/ comm != "nvidia-smi" && comm != "nvsm_core" && comm != "bpftrace" && comm != "irqbalance" &&  comm != "top" && comm != "mosquitto" && comm != "ipmitool" && comm != "head" && comm != "lspci" && comm != "snmpd" && comm != "tmux" && comm != "ps" && comm != "ls" && comm != "htop"/
+/comm == "python"/
 {
 	@vstart[tid] = nsecs;
 	@vfilename[tid] = ((struct path *)arg0)->dentry->d_name.name;
