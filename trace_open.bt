@@ -5,7 +5,8 @@
 
 BEGIN
 {
-	printf("%-17s %-8s %-12s %-12s %-6s %s\n", "TIMESTAMP", "PID", "COMM", "FUNC", "LAT (ns)", "FILE");
+	printf("%-17s %-9s %-8s %-14s %-12s %-6s ", "TIMESTAMP", "TIME", "PID", "COMM", "FUNC", "LAT(ns)");
+	printf("%s\n", "FILENAME");
 }
 
 /* Only need to trace openat
@@ -14,7 +15,7 @@ BEGIN
 */
 
 tracepoint:syscalls:sys_enter_openat
-/ comm != "snmpd" && comm != "tmux" && comm != "ps" && comm != "ls" && comm != "htop"/
+/ comm != "nvidia-smi" && comm != "nvsm_core" && comm != "bpftrace" && comm != "irqbalance" &&  comm != "top" && comm != "mosquitto" && comm != "ipmitool" && comm != "head" && comm != "lspci" && comm != "snmpd" && comm != "tmux" && comm != "ps" && comm != "ls" && comm != "htop"/
 {
     @start[tid] = nsecs;
 	@func[tid] = "openat";
@@ -24,9 +25,11 @@ tracepoint:syscalls:sys_enter_openat
 tracepoint:syscalls:sys_exit_openat
 /@filename[tid]/
 {
-	//printf("%lu %d %s %s %d %s\n",
-	printf("%-17lu %-8d %-12s %-12s %-6d %s\n",
-		nsecs,
+	printf("%-17lu ", nsecs);
+
+	time("%H:%M:%S  ");
+
+	printf("%-8d %-14s %-12s %-6d %s\n",
 		pid,
 		comm,
 		@func[tid],
@@ -39,7 +42,7 @@ tracepoint:syscalls:sys_exit_openat
 }
 
 kprobe:vfs_open
-/comm != "snmpd" && comm != "tmux" && comm != "ps" && comm != "ls" && comm != "htop"/
+/ comm != "nvidia-smi" && comm != "nvsm_core" && comm != "bpftrace" && comm != "irqbalance" &&  comm != "top" && comm != "mosquitto" && comm != "ipmitool" && comm != "head" && comm != "lspci" && comm != "snmpd" && comm != "tmux" && comm != "ps" && comm != "ls" && comm != "htop"/
 {
 	@vstart[tid] = nsecs;
 	@vfilename[tid] = ((struct path *)arg0)->dentry->d_name.name;
@@ -48,9 +51,11 @@ kprobe:vfs_open
 kretprobe:vfs_open
 /@vfilename[tid]/
 {
-	//printf("%lu %d %s %s %d %s\n",
-	printf("%-17lu %-8d %-12s %-12s %-6d %s\n",
-		 nsecs,
+	printf("%-17lu ", nsecs);
+
+	time("%H:%M:%S  ");
+
+	printf("%-8d %-14s %-12s %-6d %s\n",
 		 pid,
 		 comm,
 		 "vfs_open",

@@ -7,13 +7,14 @@
 
 BEGIN
 {
-	printf("%-18s %-6s %-16s %-16s %-8s %-10s ", "TIMESTAMP", "PID", "COMM", "FUNC", "LAT (ns)", "REQ");
-	printf("%-10s %s\n", "BYTES", "FILE");
+	printf("Capturing VFS Read and Write calls\n");
+
+	printf("%-17s %-9s %-6s %-14s %-4s %-7s ", "TIMESTAMP", "TIME", "PID", "COMM", "R/W", "LAT(ns)");
+	printf("%-10s %-10s %s\n", "REQUESTED", "RETURNED", "FILE");
 }
 
 kprobe:vfs_read
-// Filter out programs that cause lots of useless output
-/ comm != "snmpd" && comm != "df" && comm != "ps" && comm != "ls" && comm != "htop" && comm != "sshd" && comm != "bpftrace"/
+/comm != "ps" && comm != "nvsm_core" &&  comm != "dpkg" && comm != "irqbalance" && comm != "smartctl" && comm != "nvidia-smi" && comm != "sshd" && comm != "bpftrace" && comm != "top" && comm != "mosquitto" && comm != "ipmitool" && comm != "head" && comm != "lspci" && comm != "snmpd" && comm != "tmux" && comm != "df" && comm != "ls" && comm != "htop"/
 {
 	@start[tid] = nsecs;
 	@req[tid] = arg2;
@@ -27,18 +28,17 @@ kretprobe:vfs_read
 {
 	$now = nsecs;
 	
-	// One line for pretty printing, one line for minimizing output size
-	printf("%lu %d %s %s %d %d ", 
-	//printf("%-18lu %-6d %-16s %-16s %-8d %-10d ", 
-		$now, 
+	printf("%-17lu ", $now);
+	time("%H:%M:%S  ");
+
+	printf("%-6d %-14s %-4s %-7d %-10d ", 
 		pid,
 		comm,
-		"vfs_read",
+		"R",
 		$now - @start[tid],
 		@req[tid]);
 
-	printf("%d %s\n", retval, @filename[tid]);
-	//printf("%-10d %s\n", retval, @filename[tid]);
+	printf("%-10d %s\n", retval, @filename[tid]);
 
 	delete(@start[tid]);
 	delete(@req[tid]);
@@ -49,7 +49,7 @@ kretprobe:vfs_read
 
 
 kprobe:vfs_write
-/ comm != "snmpd" && comm != "df" && comm != "ps" && comm != "ls" && comm != "htop" && comm != "sshd" && comm != "bpftrace"/
+/ comm != "nvsm_core" && comm != "dpkg" && comm != "irqbalance" && comm != "smartctl" && comm != "nvidia-smi" && comm != "sshd" && comm != "bpftrace" && comm != "top" && comm != "mosquitto" && comm != "ipmitool" && comm != "head" && comm != "lspci" && comm != "snmpd" && comm != "tmux" && comm != "df" && comm != "ls" && comm != "htop"/
 {
     @wstart[tid] = nsecs;
 	@wreq[tid] = arg2;
@@ -62,17 +62,19 @@ kretprobe:vfs_write
 {
     $now = nsecs;
 	
-	printf("%lu %d %s %s %d %d ",
-	//printf("%-18lu %-6d %-16s %-16s %-8d %-10d ",
-		$now,
+	printf("%-17lu ", $now);
+
+	time("%H:%M:%S  ");
+
+	printf("%-6d %-14s %-4s %-7d %-10d ",
 		pid,
 		comm,
-		"vfs_write",
+		"W",
 		$now - @wstart[tid],
-		@wreq[tid]);
+		@wreq[tid]
+	);
 
-	printf("%d %s\n", retval, @wfilename[tid]);
-	//printf("%-10d %s\n", retval, @wfilename[tid]);
+	printf("%-10d %s\n", retval, @wfilename[tid]);
 
 	delete(@wstart[tid]);
 	delete(@wreq[tid]);

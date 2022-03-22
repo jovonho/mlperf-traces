@@ -1,4 +1,5 @@
 #!/usr/bin/env bpftrace
+
 #include <linux/blkdev.h>
 
 /*
@@ -14,44 +15,41 @@
 
 BEGIN
 {
-	printf("%-18s %-16s %-8s %-16s %-8s %-8s ", "TIMESTAMP", "COMM", "PID", "CALLER?", "CALLING PID", "DISK");
-	printf("%-1s %-12s %-8s %7s\n", "T", "SECTOR", "BYTES", "LAT(ns)");
+	printf("%-17s %-9s %-8s %-14s %-8s %-14s ", "TIMESTAMP", "TIME", "PID", "COMM", "DONEPID", "DONECOMM");
+	printf("%-4s %-1s %-16s %-12s %s\n", "DISK", "T", "SECTOR", "BYTES", "LAT(ns)");
 }
 
 kprobe:blk_account_io_start
+//kprobe:blk_mq_start_request
+/comm != "influxd"/
 {
 	@start[arg0] = nsecs;
 	@iopid[arg0] = pid;
 	@iocomm[arg0] = comm;
 	@disk[arg0] = ((struct request *)arg0)->rq_disk->disk_name;
-	@rw[arg0] = (((struct request *)arg0)->cmd_flags & 255);
-	//@rw[arg0] = (((struct request *)arg0)->cmd_flags & REQ_OP_MASK) == 1 ? "W" : "R";
+	@rw[arg0] = (((struct request *)arg0)->cmd_flags & 255) == 1 ? "W" : "R";
 	@sector[arg0] = ((struct request *)arg0)->__sector;
 	@len[arg0] =  ((struct request *)arg0)->__data_len;
 }
 
 kprobe:blk_account_io_done
-/@start[arg0] != 0 && @iopid[arg0] != 0 && @iocomm[arg0] != ""/
-//@start[arg0] != 0/
+/@disk[arg0] == "sda" && @start[arg0] != 0 && @iopid[arg0] != 0 && @iocomm[arg0] != ""/
 {
 	$now = nsecs;
-	// For tracing, minimize size
-	//printf("%lu %-16s %-8d %-16s %-8d %-8s ",	    
-	printf("%lu %s %d %s %d %s ",	    
-	// For pretty printing
-	//printf("%-18lu %-16s %-8d %-8s %-1s %-12llu ",	    
-		$now, 
-		@iocomm[arg0], 
-		@iopid[arg0], 
-		comm,
-		pid,
-		@disk[arg0] 
-		//@rw[arg0], 
-		//@sector[arg0]
-		);
+	
+	printf("%-17lu ", $now);
+	
+	time("%H:%M:%S  ");
 
-	printf("%d %llu %u %d\n", @rw[arg0], @sector[arg0], @len[arg0], ($now - @start[arg0]));
-	//printf("%-1s %-12llu %u %d\n", @rw[arg0], @sector[arg0], @len[arg0], ($now - @start[arg0]));
+	printf("%-8d %-14s %-8d %-14s %-4s ",	    
+		@iopid[arg0], 
+		@iocomm[arg0], 
+		pid,
+		comm,
+		@disk[arg0] 
+	);
+
+	printf("%-1s %-16llu %-12u %d\n", @rw[arg0], @sector[arg0], @len[arg0], ($now - @start[arg0]));
 
 	delete(@start[arg0]);
 	delete(@iopid[arg0]);
