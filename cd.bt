@@ -204,7 +204,7 @@ kprobe:vfs_write
     @wstart[tid] = nsecs;
 	@wbuf[tid] = arg1;
 	@wreq[tid] = arg2;
-	@wbuf[tid]
+	@wbuf[tid];
 	@wfilename[tid] = str(((struct file *)arg0)->f_path.dentry->d_name.name);
 }
 kretprobe:vfs_write
