@@ -113,8 +113,8 @@ kretprobe:do_mmap
         time("%H:%M:%S  ");
         printf("%-8d %-8d", pid, tid);
 
-        printf("%-8s %-5s %-8d 0x%-4x 0x%-4x ", comm, "mmap", @mm_len[tid], @mm_prot[tid], @mm_flag[tid]);
-        printf("0x%-12x %s\n", retval, str(@mm_filename[tid]));	
+        printf("%-8s %-10s %-8d 0x%-4x 0x%-4x ", comm, "mmap", @mm_len[tid], @mm_prot[tid], @mm_flag[tid]);
+        printf("0x%lx %s\n", retval, str(@mm_filename[tid]));	
 
 	delete(@mm_filename[tid]);
 	delete(@mm_len[tid]);
@@ -143,7 +143,7 @@ tracepoint:syscalls:sys_exit_openat
 	time("%H:%M:%S  ");
 	printf("%-8d %-8d", pid, tid);
 
-	printf("%-8s %-5s %-4d %-8x %s\n",
+	printf("%-8s %-10s %-4d %-8x %s\n",
 		comm,
 		"openat",
 		args->ret,
@@ -180,7 +180,7 @@ kretprobe:vfs_read
 	time("%H:%M:%S  ");
 	printf("%-8d %-8d", pid, tid);
 
-	printf("%-8s %-10s 0x%-12x %-10d %-8d ", 
+	printf("%-8s %-10s 0x%lx %-10d %-8d ", 
 		comm,
 		"vfs_read",
 		@buf[tid],
@@ -216,13 +216,13 @@ kretprobe:vfs_write
 	time("%H:%M:%S  ");
 	printf("%-8d %-8d", pid, tid);
 
-	printf("%-8s %-10s 0x%-12x %-10d %-8d ", 
+	printf("%-8s %-10s 0x%lx %-10d %-8d ", 
 		comm,
 		"vfs_write",
 		@wbuf[tid],
 		// $now - @wstart[tid],
-		@wreq[tid]
-		@woff[tid],
+		@wreq[tid],
+		@woff[tid]
 	);
 
 	printf("%-10d %s\n", retval, @wfilename[tid]);
@@ -263,10 +263,10 @@ kprobe:filp_close
 	time("%H:%M:%S  ");
 	printf("%-8d %-8d", pid, tid);
 
-	printf("%-8s %-12s %-8d %s\n",
+	printf("%-8s %-10s %-8d %s\n",
 		comm,
 		"fp_close",
-		@closefd[tid]
+		@closefd[tid],
 		str(((struct file *)arg0)->f_path.dentry->d_name.name)
 	);
 
