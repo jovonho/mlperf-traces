@@ -1,0 +1,262 @@
+#!/usr/local/bin/bpftrace
+
+#include <linux/fs.h>
+#include <linux/mm.h>
+
+
+BEGIN
+{
+	printf("%-17s %-10s %-6s %-8s %-2s %s\n", "TIMESTAMP", "TIME", "PID", "COMM", "TYPE", "FILE");
+}
+
+tracepoint:syscalls:sys_enter_mkdirat
+/ comm == "python" /
+{
+	printf("enter_mkdirat %s\n", str(args->pathname));
+}
+
+tracepoint:syscalls:sys_exit_mkdirat
+/ comm == "python" /
+{
+        printf("exit_mkdirat\n");
+}
+
+
+tracepoint:syscalls:sys_enter_mkdir
+/ comm == "python" /
+{
+        printf("enter_mkdir %s\n", str(args->pathname));
+}
+
+tracepoint:syscalls:sys_exit_mkdir
+/ comm == "python" /
+{
+        printf("exit_mkdir\n");
+}
+
+//int vfs_mkdir(struct user_namespace *, struct inode *, struct dentry *, umode_t);
+kprobe:vfs_mkdir
+/ comm == "python" /
+{
+
+	$dentry = (struct dentry *)arg1;
+	@mkd_start[tid] = nsecs;
+	@mkd_name[tid] = $dentry->d_name.name;
+	@mkd_mode[tid] = arg2;
+
+//	printf("start vfs_mkdir %s\n", str(@mkd_name[tid]));
+
+}
+
+kretprobe:vfs_mkdir
+/ @mkd_start[tid] /
+{
+	$now = nsecs;
+
+	printf("%-17lu ", $now);
+        time("%H:%M:%S  ");
+
+	printf("%-8d", pid);	
+	printf("%-8d %-8s %-12s %-10d %-8lu %s\n",
+		tid, comm, "vfs_mkdir", $now - @mkd_start[tid], @mkd_mode[tid], str(@mkd_name[tid]));
+
+	delete(@mkd_start[tid]);
+	delete(@mkd_name[tid]);
+	delete(@mkd_mode[tid]);
+}
+
+
+// int vfs_rmdir(struct user_namespace *, struct inode *, struct dentry *);
+
+kprobe:vfs_rmdir
+/ comm == "python" /
+{
+        $dentry = (struct dentry *)arg2;
+        @rmd_start[tid] = nsecs;
+        @rmd_name[tid] = $dentry->d_name.name;
+        @rmd_mode[tid] = arg3;
+}
+
+kretprobe:vfs_rmdir
+/ @rmd_start[tid] /
+{
+        $now = nsecs;
+
+        printf("%-17lu ", $now);
+        time("%H:%M:%S  ");
+	
+	printf("%-8d", pid);
+        printf("%-8d %-8s %-12s %-10d %-8lu %s\n",
+                tid, comm, "vfs_rmdir", $now - @rmd_start[tid], @rmd_mode[tid], str(@rmd_name[tid]));
+
+	delete(@rmd_start[tid]);
+        delete(@rmd_name[tid]);
+        delete(@rmd_mode[tid]);
+}
+
+
+//unsigned long do_mmap(struct file *file, unsigned long addr,
+//			unsigned long len, unsigned long prot,
+//			unsigned long flags, unsigned long pgoff,
+//			unsigned long *populate, struct list_head *uf)
+
+kprobe:do_mmap
+/ comm == "python" /
+{
+        $file = (struct file *)arg0;
+	@mm_filename[tid] = $file->f_path.dentry->d_name.name; 
+	@mm_len[tid] = arg2;
+	@mm_prot[tid] = arg3;
+	@mm_flag[tid] = arg4;
+}
+
+kretprobe:do_mmap
+/ @mm_filename[tid] /
+{
+        printf("%-17lu ", nsecs);
+        time("%H:%M:%S  ");
+
+        printf("%-8d ", pid);
+        printf("%-8d %-8s %-5s %-8d 0x%x 0x%x ", tid, comm, "mmap", @mm_len[tid], @mm_prot[tid], @mm_flag[tid]);
+        printf("0x%x %s\n", retval, str(@mm_filename[tid]));	
+
+	delete(@mm_filename[tid]);
+	delete(@mm_len[tid]);
+	delete(@mm_prot[tid]);
+	delete(@mm_flag[tid]);
+}
+	
+
+tracepoint:syscalls:sys_enter_openat
+/ comm == "python" /
+{
+	@start[tid] = nsecs;
+	@dfd[tid] = args->dfd;
+	@flags[tid] = args->flags;
+        @fn[tid] = args->filename;
+}
+
+tracepoint:syscalls:sys_exit_openat
+/@fn[tid]/
+{
+        printf("%-17lu ", nsecs);
+        time("%H:%M:%S  ");
+
+	printf("%-8d ", pid);
+        printf("%-8d %-8s %-5s %-4d %-8x %s\n",
+                tid,
+                comm,
+		"openat",
+                args->ret,
+                @flags[tid],
+                str(@fn[tid])
+        );
+
+        delete(@flags[tid]);
+	delete(@dfd[tid]);
+        delete(@fn[tid]);
+}
+
+tracepoint:syscalls:sys_enter_creat
+/ comm == "python" /
+{
+	printf("%-17lu ", nsecs);
+        time("%H:%M:%S  ");
+
+	printf("%-8d", pid);
+	printf("%-6d %-16s %-5s %-5hu %s\n", 
+		tid, comm, "creat", args->mode, str(args->pathname));
+}
+
+
+
+kprobe:filp_close
+/ comm == "python" /
+{
+	//printf("close filp: %s\n", str(((struct file *)arg0)->f_path.dentry->d_name.name));
+
+	printf("%-17lu ", nsecs);
+	time("%H:%M:%S  ");
+	
+	printf("%-8d ", pid);
+	printf("%-8d %-8s %-12s %s\n",
+		tid,
+		comm,
+		"fp_close",
+		str(((struct file *)arg0)->f_path.dentry->d_name.name)
+	);
+}
+
+
+
+// Usually openat with O_CREAT is called 
+
+kprobe:vfs_create
+/ comm == "python"/
+{
+	@start[tid] = nsecs;
+	//@dentry[tid] = arg2;
+	$dentry = (struct dentry *)arg2;
+	@filename[tid] = str($dentry->d_name.name);
+	printf("vfs_create");
+}
+
+
+kretprobe:vfs_create
+/@start[tid]/
+{
+	$now = nsecs;
+	
+	printf("%-17lu ", nsecs);
+	time("%H:%M:%S  ");
+
+	printf("%-8d", pid);
+	printf("%-8d %-8s %-4s %-7d ", 
+		tid,
+		comm,
+		"C",
+		$now - @start[tid]);
+
+	printf("%-10d %s\n", retval, @filename[tid]);
+
+	delete(@start[tid]);
+	delete(@filename[tid]);
+}
+
+
+
+tracepoint:syscalls:sys_enter_unlinkat
+/ comm == "python" /
+{
+	printf("%-17lu ", nsecs);
+        time("%H:%M:%S  ");
+        
+	printf("%-8d", pid);
+	printf("%-8d %-8s %-10s %-5hu %s\n", 
+		tid, comm, "unlinkat", args->dfd, str(args->pathname));
+}
+
+tracepoint:syscalls:sys_enter_unlink
+/ comm == "python" /
+{
+        printf("%-17lu ", nsecs);
+        time("%H:%M:%S  ");
+
+	printf("%-8d ", pid);
+        printf("%-8d %-8s %-8s %s\n", 
+		tid, comm, "unlink", str(args->pathname));
+}
+
+kprobe:vfs_unlink
+/ comm == "python" /
+{
+        printf("%-17lu ", nsecs);
+        time("%H:%M:%S  ");
+
+	$dentry = (struct dentry *)arg1;
+	
+	printf("%-8d ", pid);
+	printf("%-8d %-8s %-10s %s\n", 
+		tid, comm, "vfs_unlink",
+	        str($dentry->d_name.name));
+}
