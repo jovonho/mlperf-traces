@@ -33,7 +33,7 @@ tracepoint:syscalls:sys_exit_mkdir
 	printf("%-8d %-8d", pid, tid);
 
 	printf("%-8s %-10s %-10d %s\n",
-		comm, "mkdir()", $latency, @tmkdpath[tid]));
+		comm, "mkdir()", $latency, @tmkdpath[tid]);
 
 	delete(@tmkdstart[tid]);
 	delete(@tmkdpath[tid]);
