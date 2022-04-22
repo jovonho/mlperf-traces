@@ -113,7 +113,7 @@ kretprobe:do_mmap
         time("%H:%M:%S  ");
         printf("%-8d %-8d", pid, tid);
 
-        printf("%-8s %-5s %-8d 0x%x 0x%x ", comm, "mmap", @mm_len[tid], @mm_prot[tid], @mm_flag[tid]);
+        printf("%-8s %-5s %-8d 0x%-4x 0x%-4x ", comm, "mmap", @mm_len[tid], @mm_prot[tid], @mm_flag[tid]);
         printf("0x%-12x %s\n", retval, str(@mm_filename[tid]));	
 
 	delete(@mm_filename[tid]);
@@ -168,7 +168,7 @@ kprobe:vfs_read
 	@start[tid] = nsecs;
 	@buf[tid] = arg1;
 	@req[tid] = arg2;
-	@off[tid] = arg3;
+	@off[tid] = *arg3;
 	@filename[tid] = str(((struct file *)arg0)->f_path.dentry->d_name.name);
 }
 kretprobe:vfs_read
@@ -180,7 +180,7 @@ kretprobe:vfs_read
 	time("%H:%M:%S  ");
 	printf("%-8d %-8d", pid, tid);
 
-	printf("%-14s %-10s 0x%-12x %-10d %-8d ", 
+	printf("%-8s %-10s 0x%-12x %-10d %-8d ", 
 		comm,
 		"vfs_read",
 		@buf[tid],
@@ -204,7 +204,7 @@ kprobe:vfs_write
     @wstart[tid] = nsecs;
 	@wbuf[tid] = arg1;
 	@wreq[tid] = arg2;
-	@woff[tid] = arg3;
+	@woff[tid] = *arg3;
 	@wfilename[tid] = str(((struct file *)arg0)->f_path.dentry->d_name.name);
 }
 kretprobe:vfs_write
@@ -216,13 +216,13 @@ kretprobe:vfs_write
 	time("%H:%M:%S  ");
 	printf("%-8d %-8d", pid, tid);
 
-	printf("%-14s %-10s 0x%-12x %-10d %-8d ", 
+	printf("%-8s %-10s 0x%-12x %-10d %-8d ", 
 		comm,
 		"vfs_write",
 		@wbuf[tid],
-		@woff[tid],
 		// $now - @wstart[tid],
 		@wreq[tid]
+		@woff[tid],
 	);
 
 	printf("%-10d %s\n", retval, @wfilename[tid]);
@@ -245,28 +245,32 @@ kretprobe:vfs_write
 tracepoint:syscalls:sys_enter_close
 / comm == "python" /
 {
-	printf("%-17lu ", nsecs);
-	time("%H:%M:%S  ");
-	printf("%-8d %-8d", pid, tid);
+	// printf("%-17lu ", nsecs);
+	// time("%H:%M:%S  ");
+	// printf("%-8d %-8d", pid, tid);
 
-	printf("%-8s close(fd=%d)\n",
-		comm,
-		args->fd
-	);
+	// printf("%-8s close(fd=%d)\n",
+	// 	comm,
+	// 	args->fd
+	// );
+	@closefd[tid] = args->fd;
 }
 // int filp_close(struct file *filp, fl_owner_t id)
 kprobe:filp_close
-/ comm == "python" /
+/ @closefd[tid] /
 {
 	printf("%-17lu ", nsecs);
 	time("%H:%M:%S  ");
 	printf("%-8d %-8d", pid, tid);
 
-	printf("%-8s %-12s %s\n",
+	printf("%-8s %-12s %-8d %s\n",
 		comm,
 		"fp_close",
+		@closefd[tid]
 		str(((struct file *)arg0)->f_path.dentry->d_name.name)
 	);
+
+	delete(@closefd[tid])
 }
 
 
@@ -397,4 +401,6 @@ END
 	clear(@wbuf);
 	clear(@woff);
 	clear(@wfilename);		
+
+	clear(@closefd)
 }
