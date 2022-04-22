@@ -139,15 +139,15 @@ kretprobe:do_mmap
 tracepoint:syscalls:sys_enter_munmap
 / comm == "python" /
 {
-	mun_start[tid] = nsecs;
-	mun_addr[tid] = args->addr;
-	mun_len[tid] = args->len;
+	@mun_start[tid] = nsecs;
+	@mun_addr[tid] = args->addr;
+	@mun_len[tid] = args->len;
 }
 tracepoint:syscalls:sys_exit_munmap
-/ mun_start[tid] /
+/ @mun_start[tid] /
 {
 	$now = nsecs;
-	$latency = $now - @rmd_start[tid];
+	$latency = $now - @mun_start[tid];
 
 	printf("%-17lu ", $now);
 	time("%H:%M:%S  ");
@@ -155,9 +155,9 @@ tracepoint:syscalls:sys_exit_munmap
 
 	printf("%-8s %-10s 0x%lx 0x%-8d %-10d\n", comm, "munmap", @mun_addr[tid], @mun_len[tid], $latency);
 	
-	delete(mun_start[tid])
-	delete(mun_addr[tid])
-	delete(mun_len[tid])
+	delete(@mun_start[tid]);
+	delete(@mun_addr[tid]);
+	delete(@mun_len[tid]);
 }
 
 
@@ -291,10 +291,10 @@ kretprobe:vfs_write
 		comm,
 		"vfs_write",
 		@vw_buf[tid],
-		@vw_req[tid]
-		@vw_off[tid],
+		@vw_req[tid],
+		@vw_off[tid]
 	);
-	printf("%-10d %-10s %s\n", retval, $latency, @vw_fn[tid]);
+	printf("%-10d %-10d %s\n", retval, $latency, @vw_fn[tid]);
 
 	delete(@vw_start[tid]);
 	delete(@vw_buf[tid]);
@@ -316,7 +316,7 @@ kretprobe:vfs_write
 tracepoint:syscalls:sys_enter_close
 / comm == "python" /
 {	
-	@tc_start[tid] = nsec;
+	@tc_start[tid] = nsecs;
 	@closefd[tid] = args->fd;
 }
 tracepoint:syscalls:sys_exit_close
@@ -343,14 +343,14 @@ tracepoint:syscalls:sys_exit_close
 kprobe:filp_close
 / @closefd[tid] /
 {
-	c_start[tid] = nsecs;
-	c_fd[tid] = @closefd[tid];
-	c_fn[tid] = str(((struct file *)arg0)->f_path.dentry->d_name.name);
+	@c_start[tid] = nsecs;
+	@c_fd[tid] = @closefd[tid];
+	@c_fn[tid] = str(((struct file *)arg0)->f_path.dentry->d_name.name);
 	// don't need this anymore
 	delete(@closefd[tid]);
 }
-kretrobe:filp_close
-/ c_start[tid] /
+kretprobe:filp_close
+/ @c_start[tid] /
 {
 	$now = nsecs;
 	$latency = $now - @c_start[tid];
@@ -362,9 +362,9 @@ kretrobe:filp_close
 	printf("%-8s %-12s %-8d %-8d %s\n",
 		comm,
 		"fp_close",
-		c_fd[tid],
+		@c_fd[tid],
 		$latency,
-		c_fn[tid]
+		@c_fn[tid]
 	);
 
 	delete(@c_start[tid]);
@@ -435,11 +435,11 @@ kretprobe:vfs_create
 tracepoint:syscalls:sys_enter_unlink
 / comm == "python" /
 {
-	unlnk_start[tid] = nsecs;
-	unlnk_fn[tid] = str(args->pathname);
+	@unlnk_start[tid] = nsecs;
+	@unlnk_fn[tid] = str(args->pathname);
 }
 tracepoint:syscalls:sys_enter_unlink
-/ unlnk_start[tid] /
+/ @unlnk_start[tid] /
 {
 	$now = nsecs;
 	$latency = $now - @unlnk_start[tid];
@@ -452,22 +452,23 @@ tracepoint:syscalls:sys_enter_unlink
 		comm, 
 		"unlink()", 
 		$latency,
-		unlnk_fn[tid]);
+		@unlnk_fn[tid]
+	);
 
-	delete(unlnk_start[tid])
-	delete(unlnk_fn[tid])
+	delete(@unlnk_start[tid]);
+	delete(@unlnk_fn[tid]);
 }
 
 
 kprobe:vfs_unlink
 / comm == "python" /
 {
-	v_unlnk_start[tid] = nsecs;
+	@v_unlnk_start[tid] = nsecs;
 	$dentry = (struct dentry *)arg1;
-	v_unlnk_fn[tid] = str($dentry->d_name.name);
+	@v_unlnk_fn[tid] = str($dentry->d_name.name);
 }
 kretprobe:vfs_unlink
-/ v_unlnk_start[tid] /
+/ @v_unlnk_start[tid] /
 {
 	$now = nsecs;
 	$latency = $now - @unlnk_start[tid];
@@ -480,11 +481,11 @@ kretprobe:vfs_unlink
 		comm, 
 		"vfs_unlink",
 		$latency,
-		v_unlnk_fn[tid]
+		@v_unlnk_fn[tid]
 	);
 	
-	delete(v_unlnk_start[tid])
-	delete(v_unlnk_fn[tid])
+	delete(@v_unlnk_start[tid]);
+	delete(@v_unlnk_fn[tid]);
 }
 
 
@@ -505,9 +506,9 @@ END
 	clear(@mm_prot);
 	clear(@mm_flag);
 
-	clear(mun_start)
-	clear(mun_addr)
-	clear(mun_len)
+	clear(@mun_start);
+	clear(@mun_addr);
+	clear(@mun_len);
 
 	clear(@o_start);
 	clear(@o_flags);
@@ -532,7 +533,7 @@ END
 	clear(@rmd_name);
 	clear(@rmd_mode);
 
-	clear(@tc_start)
+	clear(@tc_start);
 	clear(@closefd);
 	clear(@c_start);
 	clear(@c_fd);
@@ -542,8 +543,8 @@ END
 	clear(@cmod);
 	clear(@cfn);
 
-	clear(unlnk_start);
-	clear(unlnk_fn);
-	clear(v_unlnk_start);
-	clear(v_unlnk_fn);
+	clear(@unlnk_start);
+	clear(@unlnk_fn);
+	clear(@v_unlnk_start);
+	clear(@v_unlnk_fn);
 }
