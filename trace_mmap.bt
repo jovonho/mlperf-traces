@@ -27,6 +27,7 @@ BEGIN
 kprobe:do_mmap
 / comm == "python" /
 {
+	@mm_start[tid] = nsecs;
 	$file = (struct file *)arg0;
 	@mm_filename[tid] = $file->f_path.dentry->d_name.name; 
 	@mm_len[tid] = arg2;
@@ -37,7 +38,7 @@ kretprobe:do_mmap
 / @mm_filename[tid] /
 {
 	$now = nsecs;
-	$latency = $now - @rmd_start[tid];
+	$latency = $now - @mm_start[tid];
 
 	$addr = retval;
 
@@ -57,6 +58,7 @@ kretprobe:do_mmap
 		str(@mm_filename[tid]));	
 
 
+	delete(@mm_start[tid]);
 	delete(@mm_filename[tid]);
 	delete(@mm_len[tid]);
 	delete(@mm_prot[tid]);
@@ -101,6 +103,7 @@ tracepoint:syscalls:sys_exit_munmap
 // ************************************************************
 END 
 {
+	clear(@mm_start);
 	clear(@mm_filename);
 	clear(@mm_len);
 	clear(@mm_prot);

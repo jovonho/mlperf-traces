@@ -12,17 +12,17 @@ BEGIN
 	printf("%-8s %-8s %s\n", "FLAGS", "LAT(ns)", "FILENAME");
 
 	// vfs_open() format
-	printf("vfs_open():\n")
+	printf("vfs_open():\n");
 	printf("%-17s %-10s %-6s %-6s %-10s %-8s ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION", "LAT(ns)");
 	printf("%s\n", "FILENAME");
 
 	// close() format
-	printf("close():\n")
+	printf("close():\n");
 	printf("%-17s %-10s %-6s %-6s %-10s %-4s ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION", "FD");
 	printf("%-8s\n","LAT(ns)");
 
 	// vfs_close() format
-	printf("vfs_close():\n")
+	printf("vfs_close():\n");
 	printf("%-17s %-10s %-6s %-6s %-10s %-4s ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION", "FD");
 	printf("%-8s %s\n","LAT(ns)", "FILENAME");
 }

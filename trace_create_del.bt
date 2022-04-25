@@ -19,7 +19,7 @@ BEGIN
 
 	printf("vfs_create():\n");
 	printf("%-15s %-10s %-6s %-6s %-10s", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION");
-	printf("%-5s %-3s %-8d %s\n", "MODE", "RET", "LAT(ns)", "FILENAME");
+	printf("%-5s %-3s %-8s %s\n", "MODE", "RET", "LAT(ns)", "FILENAME");
 
 	printf("unlink() and vfs_unlink():\n");
 	printf("%-15s %-10s %-6s %-6s %-10s ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION");
