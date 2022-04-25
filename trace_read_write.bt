@@ -6,8 +6,8 @@
 
 BEGIN
 {
-	printf("%-17s %-10s %-6s %-6s %-10s %-5s ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION", "FD");
-	printf("%-10s %-10s %-8s\n", "REQ (B)", "RET (B)", "LAT(ns)");
+	printf("%-17s %-8s %-6s %-6s %-10s %-4s ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION", "FD");
+	printf("%-13s %-8s %-10s %-10s %-8s\n", "BUFFER ADDR", "OFFSET", "REQ (B)", "RET (B)", "LAT(ns)");
 }
 
 
@@ -48,10 +48,10 @@ tracepoint:syscalls:sys_exit_read
 	$latency = $now - @read_start[tid];
 
 	printf("%-17lu ", $now);
-	time("%H:%M:%S  ");
-	printf("%-6d %-6d", pid, tid);
+	time("%H:%M:%S ");
+	printf("%-6d %-6d ", pid, tid);
 
-	printf("%-10s %-5d 0x%lx %-8d %-10d ", 
+	printf("%-10s %-4d 0x%-13lx %-8d %-10d ", 
 		"read()",
 		@read_fd[tid],
 		@address[tid],
@@ -106,10 +106,10 @@ tracepoint:syscalls:sys_exit_write
 	$latency = $now - @write_start[tid];
 
 	printf("%-17lu ", $now);
-	time("%H:%M:%S  ");
-	printf("%-6d %-6d", pid, tid);
+	time("%H:%M:%S ");
+	printf("%-6d %-6d ", pid, tid);
 
-	printf("%-10s %-5d 0x%lx %-8d %-10d ", 
+	printf("%-10s %-4d 0x%-13lx %-8d %-10d ", 
 		"write()",
 		@write_fd[tid],
 		@write_address[tid],
