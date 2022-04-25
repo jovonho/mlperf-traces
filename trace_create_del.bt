@@ -199,15 +199,8 @@ END
 	clear(@mkdir_path);
 	clear(@mkdir_mode);
 
-	clear(@mkd_start);
-	clear(@mkd_name);
-	clear(@mkd_mode);
-
 	clear(@rmdir_start);
 	clear(@rmdir_path);
-
-	clear(@rmd_start);
-	clear(@rmd_name);
 
 	clear(@unlnk_start);
 	clear(@unlnk_fullpath);

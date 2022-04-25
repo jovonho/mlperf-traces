@@ -104,7 +104,7 @@ tracepoint:syscalls:sys_exit_close
 	time("%H:%M:%S ");
 	printf("%-6d %-6d ", pid, tid);
 
-	printf("%-10s %-8d %-8d\n", 
+	printf("%-10s %-5d %-8d %s\n", 
 		"close()",
 		@c_fd[tid],
 		$latency,
