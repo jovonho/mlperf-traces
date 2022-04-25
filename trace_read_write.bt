@@ -7,7 +7,7 @@
 BEGIN
 {
 	printf("read():\n");
-	printf("%-15s %-10s %-6s %-6s %-10s %-4d ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION", "FD");
+	printf("%-15s %-10s %-6s %-6s %-10s %-4s ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION", "FD");
 	printf("%-8s %-8s %-8s\n", "REQ (B)", "RET (B)", "LAT(ns)");
 
 	printf("vfs_read():\n");
@@ -16,7 +16,7 @@ BEGIN
 
 
 	printf("write():\n");
-	printf("%-15s %-10s %-6s %-6s %-10s %-4d ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION", "FD");
+	printf("%-15s %-10s %-6s %-6s %-10s %-4s ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION", "FD");
 	printf("%-8s %-8s %-8s\n", "REQ (B)", "RET (B)", "LAT(ns)");
 
 	printf("vfs_read():\n");
