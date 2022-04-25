@@ -8,23 +8,13 @@ BEGIN
 {
 	// openat() format
 	printf("openat():\n");
-	printf("%-17s %-10s %-6s %-6s %-10s %-4s ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION", "FD");
-	printf("%-8s %-8s %s\n", "FLAGS", "LAT(ns)", "FILENAME");
-
-	// vfs_open() format
-	printf("vfs_open():\n");
-	printf("%-17s %-10s %-6s %-6s %-10s %-8s ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION", "LAT(ns)");
-	printf("%s\n", "FILENAME");
+	printf("%-17s %-8s %-6s %-6s %-10s %-4s ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION", "FD");
+	printf("%-8s %-8s %-8s %s %s\n", "FLAGS", "MODE", "LAT(ns)", "FILENAME", "FULLPATH");
 
 	// close() format
 	printf("close():\n");
-	printf("%-17s %-10s %-6s %-6s %-10s %-4s ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION", "FD");
-	printf("%-8s\n","LAT(ns)");
-
-	// vfs_close() format
-	printf("vfs_close():\n");
-	printf("%-17s %-10s %-6s %-6s %-10s %-4s ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION", "FD");
-	printf("%-8s %s\n","LAT(ns)", "FILENAME");
+	printf("%-17s %-8s %-6s %-6s %-10s %-4s ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION", "FD");
+	printf("%-8s %s\n", "LAT(ns)", "FILENAME");
 }
 
 // ************************************************************
@@ -42,56 +32,45 @@ tracepoint:syscalls:sys_enter_openat
 {
 	@o_start[tid] = nsecs;
 	@o_flags[tid] = args->flags;
-	@o_fn[tid] = str(args->filename);
+	@o_mode[tid] = args->mode;
+	@o_fullpath[tid] = str(args->filename);
 }
+
+// int vfs_open(const struct path *path, struct file *file)
+kprobe:vfs_open
+/ @o_start[tid] /
+{
+	@o_filename[tid] = str(((struct path *)arg0)->dentry->d_name.name);
+}
+
 tracepoint:syscalls:sys_exit_openat
-/@o_start[tid]/
+/ @o_start[tid] /
 {
 	$now = nsecs;
 	$latency = $now - @o_start[tid];
 	printf("%-17lu ", $now);
-	time("%H:%M:%S  ");
-	printf("%-6d %-6d", pid, tid);
+	time("%H:%M:%S ");
+	printf("%-6d %-6d ", pid, tid);
 
-	printf("%-10s %-4d %-8x %-8d %s\n",
+	printf("%-10s %-4d %-8x %-8hu %-8d ",
 		"openat()",
 		args->ret,			// the file descriptor
 		@o_flags[tid],
-		$latency,
-		@o_fn[tid]
+		@o_mode[tid],
+		$latency
+	);
+
+	printf("%s %s\n",
+		@o_filename[tid],
+		@o_fullpath[tid]
 	);
 
 	delete(@o_start[tid]);
 	delete(@o_flags[tid]);
-	delete(@o_fn[tid]);
+	delete(@o_mode[tid]);
+	delete(@o_filename[tid]);
+	delete(@o_fullpath[tid]);
 }
-// int vfs_open(const struct path *path, struct file *file)
-kprobe:vfs_open
-/comm == "python"/
-{
-	@vo_start[tid] = nsecs;
-	@vo_fn[tid] = str(((struct path *)arg0)->dentry->d_name.name);
-}
-kretprobe:vfs_open
-/@vo_start[tid]/
-{
-	$now = nsecs;
-	$latency = $now - @vo_start[tid];
-
-	printf("%-17lu ", $now);
-	time("%H:%M:%S  ");
-	printf("%-6d %-6d", pid, tid);
-
-	printf("%-10s %-8d %s\n",
-		 "vfs_open()",
-		 $latency,
-		 @vo_fn[tid]
-	 );
-
-	 delete(@vo_start[tid]);
-	 delete(@vo_fn[tid]);
-}
-
 
 // ************************************************************
 // 	FILE CLOSING
@@ -105,56 +84,36 @@ kretprobe:vfs_open
 tracepoint:syscalls:sys_enter_close
 / comm == "python" /
 {	
-	@tc_start[tid] = nsecs;
-	@closefd[tid] = args->fd;
+	@c_start[tid] = nsecs;
+	@c_fd[tid] = args->fd;
 }
 // int filp_close(struct file *filp, fl_owner_t id)
 kprobe:filp_close
-/ @closefd[tid] /
-{
-	@c_start[tid] = nsecs;
-	@c_fd[tid] = @closefd[tid];
-	@c_fn[tid] = str(((struct file *)arg0)->f_path.dentry->d_name.name);
-	
-}
-kretprobe:filp_close
 / @c_start[tid] /
 {
+	@c_filename[tid] = str(((struct file *)arg0)->f_path.dentry->d_name.name);
+}
+
+tracepoint:syscalls:sys_exit_close
+/ @c_start[tid] /
+{	
 	$now = nsecs;
 	$latency = $now - @c_start[tid];
-
+	
 	printf("%-17lu ", $now);
-	time("%H:%M:%S  ");
-	printf("%-6d %-6d", pid, tid);
+	time("%H:%M:%S ");
+	printf("%-6d %-6d ", pid, tid);
 
-	printf("%-10s %-8d %-8d %s\n",
-		"fp_close()",
+	printf("%-10s %-8d %-8d\n", 
+		"close()",
 		@c_fd[tid],
 		$latency,
-		@c_fn[tid]
+		@c_filename[tid]
 	);
 
 	delete(@c_start[tid]);
 	delete(@c_fd[tid]);
-	delete(@c_fn[tid]);
-}
-tracepoint:syscalls:sys_exit_close
-/ @tc_start[tid] /
-{	
-	$now = nsecs;
-	$latency = $now - @tc_start[tid];
-	
-	printf("%-17lu ", $now);
-	time("%H:%M:%S  ");
-	printf("%-6d %-6d", pid, tid);
-
-	printf("%-10s %-8d %-8d\n", 
-		"close()",
-		@closefd[tid],
-		$latency
-	);
-	delete(@tc_start[tid]);
-	delete(@closefd[tid]);
+	delete(@c_filename[tid]);
 }
 
 
@@ -165,15 +124,12 @@ END
 {
 	clear(@o_start);
 	clear(@o_flags);
-	clear(@o_fn);
+	clear(@o_mode);
+	clear(@o_fullpath);
+	clear(@o_filename);
 
-	clear(@vo_start);
-	clear(@vo_fn);
-
-	clear(@tc_start);
-	clear(@closefd);
 	clear(@c_start);
 	clear(@c_fd);
-	clear(@c_fn);
+	clear(@c_filename);
 
 }

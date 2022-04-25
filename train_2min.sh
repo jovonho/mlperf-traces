@@ -15,6 +15,10 @@ fi
 
 output_dir=$1
 
+# Flush filesystem caches
+sync
+echo 3 > /proc/sys/vm/drop_caches
+
 # Clean-up from a previous session if needed
 tmux kill-session -t training
 
@@ -38,12 +42,11 @@ trace_open_close_pid=$!
 bpftrace trace_mmap.bt -o ${output_dir}/trace_mmap.out &
 trace_mmap_pid=$!
 
-# Start the CPU and GPU monitoring
-
+# Start the CPU and GPU traces
 mpstat 1 > ${output_dir}/cpu.out &
 trace_cpu_pid=$!
 
-nvidia-smi pmon -s um -o DT -f ${output_dir}/gpu.out &
+nvidia-smi pmon -s um -o DT -f ${output_dir}/gpu.out &		#TODO: replace with Nsight
 trace_gpu_pid=$!
 
 
