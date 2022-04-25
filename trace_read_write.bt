@@ -57,7 +57,7 @@ tracepoint:syscalls:sys_exit_read
 	printf("%-8s %-4d %-8d %-8d %-10d\n", 
 		"read()",
 		@sys_read_fd[tid],
-		sys_read_count[tid], 
+		@sys_read_count[tid], 
 		args->ret,
 		$latency
 	);

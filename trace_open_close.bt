@@ -7,7 +7,7 @@
 BEGIN
 {
 	// openat() format
-	printf("openat():\n")
+	printf("openat():\n");
 	printf("%-17s %-10s %-6s %-6s %-10s %-4s ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION", "FD");
 	printf("%-8s %-8s %s\n", "FLAGS", "LAT(ns)", "FILENAME");
 
