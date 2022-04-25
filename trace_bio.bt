@@ -20,8 +20,7 @@ BEGIN
 }
 
 kprobe:blk_account_io_start
-//kprobe:blk_mq_start_request
-/comm != "influxd"/
+/comm == "python"/
 {
 	@start[arg0] = nsecs;
 	@iopid[arg0] = pid;
