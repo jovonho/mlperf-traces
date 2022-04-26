@@ -6,10 +6,10 @@
 BEGIN
 {
 	printf("mmap():\n");
-	printf("%-17s %-6s %-4s %-13s %-8s %-8s %s\n", "TIMESTAMP", "TID", "FD", "ADDRESS", "LAT(ns)", "FILENAME");
+	printf("%-17s %-6s %-4s %-13s %-8s %s\n", "TIMESTAMP", "TID", "FD", "ADDRESS", "LAT(ns)", "FILENAME");
 
 	printf("munmap():\n");
-	printf("%-17s %-8s %-6s %-6s %-10s %-13s %-8s %-8s\n", "TIMESTAMP", "TID", "ADDRESS", "LEN", "LAT(ns)");
+	printf("%-17s %-6s %-13s %-8s %-8s\n", "TIMESTAMP", "TID", "ADDRESS", "LEN", "LAT(ns)");
 }
 
 // ************************************************************
@@ -56,8 +56,9 @@ tracepoint:syscalls:sys_exit_mmap
 	$now = nsecs;
 	$latency = $now - @mm_start[tid];
 
-	printf("%-17lu %-4d 0x%lx %-8d %-8d %s\n", 
+	printf("%-17lu %-6d %-4d 0x%lx %-8d %s\n", 
 		$now,
+		tid,
 		@mm_fd[tid],
 		@mm_addr[tid], 		
 		$latency, 
@@ -113,13 +114,9 @@ tracepoint:syscalls:sys_exit_munmap
 END 
 {
 	clear(@mm_start);
-	clear(@mm_hint);
 	clear(@mm_len);
-	clear(@mm_prot);
-	clear(@mm_flags);
 	clear(@mm_fd);
 	clear(@mm_addr);
-	clear(@mm_off);
 
 	clear(@mun_start);
 	clear(@mun_addr);
