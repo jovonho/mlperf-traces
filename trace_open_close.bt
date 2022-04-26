@@ -8,12 +8,12 @@ BEGIN
 {
 	// openat() format
 	printf("openat():\n");
-	printf("%-17s %-8s %-6s %-6s %-10s %-4s ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION", "FD");
+	printf("%-17s %-8s %-6s %-6s %-10s %-5s ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION", "FD");
 	printf("%-8s %-8s %-8s %s %s\n", "FLAGS", "MODE", "LAT(ns)", "FILENAME", "FULLPATH");
 
 	// close() format
 	printf("close():\n");
-	printf("%-17s %-8s %-6s %-6s %-10s %-4s ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION", "FD");
+	printf("%-17s %-8s %-6s %-6s %-10s %-5s ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION", "FD");
 	printf("%-8s %s\n", "LAT(ns)", "FILENAME");
 }
 
@@ -52,7 +52,7 @@ tracepoint:syscalls:sys_exit_openat
 	time("%H:%M:%S ");
 	printf("%-6d %-6d ", pid, tid);
 
-	printf("%-10s %-4d %-8x %-8hu %-8d ",
+	printf("%-10s %-5d %-8x %-8hu %-8d ",
 		"openat()",
 		args->ret,			// the file descriptor
 		@o_flags[tid],
@@ -104,10 +104,11 @@ tracepoint:syscalls:sys_exit_close
 	time("%H:%M:%S ");
 	printf("%-6d %-6d ", pid, tid);
 
-	printf("%-10s %-5d %-8d %s\n", 
+	printf("%-10s %-5d %-8d %-17s %s\n", 
 		"close()",
 		@c_fd[tid],
 		$latency,
+		" ",
 		@c_filename[tid]
 	);
 

@@ -60,7 +60,7 @@ tracepoint:syscalls:sys_exit_mmap
 	time("%H:%M:%S ");
 	printf("%-6d %-6d ", pid, tid);
 
-	printf("%-10s %-4d 0x%-13x 0x%-13x %-8d 0x%-4x ", 
+	printf("%-10s %-4d 0x%-13lx 0x%-13lx %-8d 0x%-4x ", 
 		"mmap()", 
 		@mm_fd[tid],
 		$addr, 		
