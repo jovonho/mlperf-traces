@@ -30,8 +30,14 @@ tmux new-session -d -s training
 bpftrace trace_bio.bt -o ${output_dir}/trace_bio.out &
 trace_bio_pid=$!
 
-bpftrace trace_read_write.bt -o ${output_dir}/trace_read_write.out &
-trace_read_write_pid=$!
+bpftrace trace_read.bt -o ${output_dir}/trace_read.out &
+trace_read_pid=$!
+
+bpftrace trace_read_addr.bt -o ${output_dir}/trace_read_addr.out &
+trace_read_addr_pid=$!
+
+bpftrace trace_write.bt -o ${output_dir}/trace_write.out &
+trace_write_pid=$!
 
 bpftrace trace_create_del.bt -o ${output_dir}/trace_create_del.out &
 trace_create_del_pid=$!
@@ -41,6 +47,10 @@ trace_open_close_pid=$!
 
 bpftrace trace_mmap.bt -o ${output_dir}/trace_mmap.out &
 trace_mmap_pid=$!
+
+# Start time alignment trace
+bpftrace trace_time_align.bt -o ${output_dir}/trace_time_align.out &
+trace_time_align_pid=$!
 
 # Start the CPU and GPU traces
 mpstat 1 > ${output_dir}/cpu.out &
@@ -73,11 +83,17 @@ strace -ttt -f -p $root_pid -e 'trace=!ioctl,clock_gettime,sched_yield,nanosleep
 
 sleep 120
 
+# Kill the time alignment trace early since it we only need a bit
+kill $trace_time_align_pid
+
 # Kill the training process and the traces
 # Strace was stopped when root_pid ended
 ./kill_training.sh
 kill $trace_bio_pid
+kill $trace_read_pid
 kill $trace_read_write_pid
+kill $trace_read_addr_pid
+kill $trace_write_pid
 kill $trace_create_del_pid
 kill $trace_open_close_pid
 kill $trace_mmap_pid
