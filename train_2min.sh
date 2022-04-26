@@ -83,6 +83,7 @@ strace -ttt -f -p $root_pid -e 'trace=!ioctl,clock_gettime,sched_yield,nanosleep
 
 sleep 120
 
+# Save PID/TID map for later reference
 ps aux -T | grep python > ${output_dir}/pids_tids.out
 
 # Kill the time alignment trace early since it we only need a bit

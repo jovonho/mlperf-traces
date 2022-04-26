@@ -8,8 +8,7 @@
 
 BEGIN
 {
-	printf("%-17s %-6s %-4s ", "TIMESTAMP", "TID", "FD");
-	printf("%-10s %-10s %s\n", "RET (B)", "LAT(ns)", "FILENAME");
+	printf("%-17s %-6s %-4s %-10s %-10s %s\n", "TIMESTAMP", "TID", "FD", "RET (B)", "LAT(ns)", "FILENAME");
 }
 
 
