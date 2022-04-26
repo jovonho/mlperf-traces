@@ -3,7 +3,7 @@
 
 BEGIN
 {
-	printf("%-17s %-8s\n", "TIMESTAMP", "TIME");
+	printf("%-15s %-8s\n", "TIMESTAMP", "TIME");
 }
 
 // ************************************************************
@@ -15,6 +15,6 @@ BEGIN
 tracepoint:syscalls:sys_enter_*
 / comm == "python" /
 {
-	printf("%-17lu ", nsecs);
-	time("%H:%M:%S ");
+	printf("%-15lu ", nsecs);
+	time("%H:%M:%S\n");
 }

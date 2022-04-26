@@ -50,7 +50,7 @@ tracepoint:syscalls:sys_exit_read
 	$now = nsecs;
 	$latency = $now - @read_start[tid];
 
-	printf("%-17lu %-6d %-4d %-8d %-8d %s\n", 
+	printf("%-17lu %-6d %-4d %-10d %-10d %s\n", 
 		$now,
 		tid,
 		@read_fd[tid],
@@ -80,4 +80,7 @@ END
 	clear(@offset);
 	clear(@requested);
 	clear(@filename);
+
+	print(@);
+	clear(@);
 }
