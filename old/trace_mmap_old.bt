@@ -6,7 +6,9 @@
 BEGIN
 {
 	printf("mmap():\n");
-	printf("%-17s %-6s %-4s %-13s %-8s %-8s %s\n", "TIMESTAMP", "TID", "FD", "ADDRESS", "LAT(ns)", "FILENAME");
+	printf("%-17s %-8s %-6s %-6s %-10s %-4s", "TIMESTAMP", "TID", "FD");
+	printf("%-13s %-13s %-8s %-4s %-4s %-8s ", "ADDRESS", "HINT ADDR", "LEN", "PROT", "FLAGS", "LAT(ns)");
+	printf("%s\n", "FILENAME");
 
 	printf("munmap():\n");
 	printf("%-17s %-8s %-6s %-6s %-10s %-13s %-8s %-8s\n", "TIMESTAMP", "TID", "ADDRESS", "LEN", "LAT(ns)");
@@ -15,8 +17,6 @@ BEGIN
 // ************************************************************
 // 	MMAP
 // ************************************************************
-// Had to cut out a lot of output to make it all fit in a single printf call
-// Otherwise, under heavy load we would get garbled output, with printf calls interleaving
 
 // tracepoint:syscalls:sys_enter_mmap
 //     int __syscall_nr;
@@ -30,8 +30,12 @@ tracepoint:syscalls:sys_enter_mmap
 / comm == "python" /
 {
 	@mm_start[tid] = nsecs;
-	@mm_fd[tid] = args->fd;
+	@mm_hint[tid] = args->addr;		// Suggested address
 	@mm_len[tid] = args->len;
+	@mm_prot[tid] = args->prot;
+	@mm_flags[tid] = args->flags;
+	@mm_fd[tid] = args->fd;
+	@mm_off[tid] = args->off;
 }
 //unsigned long do_mmap(struct file *file, unsigned long addr,
 //			unsigned long len, unsigned long prot,
@@ -43,31 +47,36 @@ kprobe:do_mmap
 	$file = (struct file *)arg0;
 	@mm_filename[tid] = str($file->f_path.dentry->d_name.name); 
 }
-// For some reason the return value of the tracepoint doesn't work
-// but this retval does.
-kretprobe:do_mmap
-/ @mm_start[tid] /
-{
-	@mm_addr[tid] =  retval; 
-}
+
 tracepoint:syscalls:sys_exit_mmap
 / @mm_start[tid] /
 {
 	$now = nsecs;
 	$latency = $now - @mm_start[tid];
+	$addr = args->ret;						// Actual address
 
-	printf("%-17lu %-4d 0x%lx %-8d %-8d %s\n", 
+	printf("%-17lu %-4d 0x%lx 0x%lx %-8d ", 
 		$now,
 		@mm_fd[tid],
-		@mm_addr[tid], 		
-		$latency, 
-		@mm_filename[tid]
+		$addr, 		
+		@mm_hint[tid],
+		@mm_len[tid]
 	);
 
+	printf("0x%-4x 0x%-4x %-8d %s\n", 
+		@mm_prot[tid],
+		@mm_flags[tid],
+		$latency, 
+		@mm_filename[tid]
+	);	
+
 	delete(@mm_start[tid]);
+	delete(@mm_hint[tid]);
 	delete(@mm_len[tid]);
+	delete(@mm_prot[tid]);
+	delete(@mm_flags[tid]);
 	delete(@mm_fd[tid]);
-	delete(@mm_addr[tid]);
+	delete(@mm_off[tid]);
 }
 
 
@@ -118,7 +127,6 @@ END
 	clear(@mm_prot);
 	clear(@mm_flags);
 	clear(@mm_fd);
-	clear(@mm_addr);
 	clear(@mm_off);
 
 	clear(@mun_start);
