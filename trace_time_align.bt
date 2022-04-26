@@ -15,6 +15,6 @@ BEGIN
 tracepoint:syscalls:sys_enter_*
 / comm == "python" /
 {
-	printf("%-17lu ", $now);
+	printf("%-17lu ", nsecs);
 	time("%H:%M:%S ");
 }
