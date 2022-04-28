@@ -9,11 +9,21 @@ fi
 
 if [ $# -lt 2 ]
 then
-	echo "Usage: $0 <output_dir> <num_gpus>"
+	echo "Usage: $0 <output_dir> <num_gpus> (<experiment_name>)"
 	exit -1
 fi
 
 output_dir=$1
+num_gpus=$2
+
+if [ $# -lt 3 ]
+then	
+	exp_name=$(date +'%Y%m%d%H%M%S')
+else
+	exp_name=$3
+fi
+
+output_dir="${output_dir}/exp_name/"
 
 if [ ! -d $output_dir ] 
 then
@@ -94,12 +104,14 @@ strace -ttt -f -p $root_pid -e 'trace=!ioctl,clock_gettime,sched_yield,nanosleep
 # Sleep a bit to let training spawn all workers
 sleep 120
 
+echo "Slept 120s, collecting PIDs/TIDs and time_alignment trace"
 # Save PID/TID map for later reference
 ps aux -T | grep python > ${output_dir}/pids_tids.out
 
 # Kill the time alignment trace early, 2min should be plenty
 kill $trace_time_align_pid
 
+echo "Now waiting until training completion"
 
 # Now wait until training finishes
 while kill -0 "$root_pid"; do
@@ -124,8 +136,7 @@ kill $trace_gpu_pid
 cp "/mlcommons_training/image_segmentation/pytorch/results/unet3d.log" $output_dir
 
 # Archive the traces and copy them to discs server
-ts=$(date +'%Y%m%d%H%M%S')
-tar zcvf "results/traces_${ts}.tar.gz" $output_dir
+tar zcvf "results/traces_${exp_name}.tar.gz" $output_dir
 
 ./send_to_discs.sh "results/traces_${ts}.tar.gz" /data/MLIO/aws_exp_results
 
