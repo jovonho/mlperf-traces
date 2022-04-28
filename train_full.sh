@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd /tracing_tools
+
 # Force running as root
 if [ "${EUID:-$(id -u)}" -ne 0 ]
 then
