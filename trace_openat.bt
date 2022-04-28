@@ -6,7 +6,7 @@
 
 BEGIN
 {
-	printf("%-17s %-6s %-5s %-8s %s %s", "TIMESTAMP", "PID", "FD", "LAT(ns)", "FILENAME", "FULLPATH");
+	printf("%-17s %-6s %-5s %-8s %s %s\n", "TIMESTAMP", "PID", "FD", "LAT(ns)", "FULLPATH", "FILENAME");
 }
 
 // ************************************************************
@@ -46,8 +46,8 @@ tracepoint:syscalls:sys_exit_openat
 		pid,
 		args->ret,			// the file descriptor
 		$latency,
-		@o_filename[tid],
-		@o_fullpath[tid]
+		@o_fullpath[tid],
+		@o_filename[tid]
 	);
 
 	delete(@o_start[tid]);
