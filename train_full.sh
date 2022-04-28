@@ -15,10 +15,11 @@ fi
 
 output_dir=$1
 
-if [ ! -d $output_dir ]; then
+if [ ! -d $output_dir ] 
+then
 	echo "Creating $output_dir"
 	mkdir -p $output_dir
-done
+fi
 
 # Flush filesystem caches
 sync
