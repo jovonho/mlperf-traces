@@ -37,10 +37,6 @@ tracepoint:syscalls:sys_exit_close
 	$now = nsecs;
 	$latency = $now - @c_start[tid];
 	
-	printf(" ", $now);
-	printf("%-6d %-6d ", 
-	pid);
-
 	printf("%-17lu %-6d %-5d %-8d %s\n", 
 		$now,
 		pid,
@@ -60,9 +56,7 @@ tracepoint:syscalls:sys_exit_close
 // ************************************************************
 END 
 {
-
 	clear(@c_start);
 	clear(@c_fd);
 	clear(@c_filename);
-
 }

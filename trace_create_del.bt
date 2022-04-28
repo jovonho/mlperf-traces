@@ -139,7 +139,7 @@ tracepoint:syscalls:sys_enter_creat
 / comm == "python" /
 {
 	printf("%-17lu %-6d %-6d %-10s %-5hu %s\n", 
-		$now, 
+		nsecs, 
 		pid, 
 		tid,
 		"create()", 
