@@ -15,6 +15,11 @@ fi
 
 output_dir=$1
 
+if [ ! -d $output_dir ]; then
+	echo "Creating $output_dir"
+	mkdir -p $output_dir
+done
+
 # Flush filesystem caches
 sync
 echo 3 > /proc/sys/vm/drop_caches
@@ -90,6 +95,12 @@ ps aux -T | grep python > ${output_dir}/pids_tids.out
 # Kill the time alignment trace early, 2min should be plenty
 kill $trace_time_align_pid
 
+
+# Now wait until training finishes
+while kill -0 "$root_pid"; do
+	sleep 5
+done
+
 # Kill the training process and the traces
 # Strace was stopped when root_pid ended
 ./kill_training.sh
@@ -103,5 +114,8 @@ kill $trace_open_close_pid
 kill $trace_mmap_pid
 kill $trace_cpu_pid
 kill $trace_gpu_pid
+
+# Copy the application log to the results directory
+cp "/mlcommons_training/image_segmentation/pytorch/results/unet3d.log" $output_dir
 
 exit 0
