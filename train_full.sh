@@ -138,7 +138,7 @@ cp "/mlcommons_training/image_segmentation/pytorch/results/unet3d.log" $output_d
 # Archive the traces and copy them to discs server
 tar zcvf "results/traces_${exp_name}.tar.gz" $output_dir
 
-./send_to_discs.sh "results/traces_${ts}.tar.gz" /data/MLIO/aws_exp_results
+./send_to_discs.sh "results/traces_${exp_name}.tar.gz" /data/MLIO/aws_exp_results
 
 rm -rf $output_dir/*
 
