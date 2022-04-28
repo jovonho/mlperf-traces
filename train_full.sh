@@ -139,6 +139,13 @@ kill $trace_mmap_pid
 kill $trace_cpu_pid
 kill $trace_gpu_pid
 
+# Kill any remaining traces that didn't get killed above
+remaining_traces=$(ps | grep bpf | awk '{print $1}')
+for proc in $remaining_traces; 
+do	
+	kill $proc
+done
+
 # Copy the application log to the results directory
 cp "/mlcommons_training/image_segmentation/pytorch/results/unet3d.log" $output_dir
 
