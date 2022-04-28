@@ -35,6 +35,13 @@ fi
 sync
 echo 3 > /proc/sys/vm/drop_caches
 
+# Delete previous app log if it exists
+if [ -f "/mlcommons_training/image_segmentation/pytorch/results/unet3d.log" ]
+then
+	echo "Deleting old app log"
+	rm "/mlcommons_training/image_segmentation/pytorch/results/unet3d.log"
+fi
+
 # Clean-up from a previous session if needed
 tmux kill-session -t training
 
