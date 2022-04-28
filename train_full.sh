@@ -38,20 +38,24 @@ trace_bio_pid=$!
 bpftrace trace_read.bt -o ${output_dir}/trace_read.out &
 trace_read_pid=$!
 
-bpftrace trace_read_addr.bt -o ${output_dir}/trace_read_addr.out &
-trace_read_addr_pid=$!
-
 bpftrace trace_write.bt -o ${output_dir}/trace_write.out &
 trace_write_pid=$!
+
+bpftrace trace_read_addr.bt -o ${output_dir}/trace_read_addr.out &
+trace_read_addr_pid=$!
 
 bpftrace trace_create_del.bt -o ${output_dir}/trace_create_del.out &
 trace_create_del_pid=$!
 
-bpftrace trace_open_close.bt -o ${output_dir}/trace_open_close.out &
-trace_open_close_pid=$!
+bpftrace trace_openat.bt -o ${output_dir}/trace_openat.out &
+trace_openat_pid=$!
+
+bpftrace trace_close.bt -o ${output_dir}/trace_close.out &
+trace_close_pid=$!
 
 bpftrace trace_mmap.bt -o ${output_dir}/trace_mmap.out &
 trace_mmap_pid=$!
+
 
 # Start time alignment trace
 bpftrace trace_time_align.bt -o ${output_dir}/trace_time_align.out &
@@ -106,16 +110,25 @@ done
 ./kill_training.sh
 kill $trace_bio_pid
 kill $trace_read_pid
-kill $trace_read_write_pid
 kill $trace_read_addr_pid
 kill $trace_write_pid
 kill $trace_create_del_pid
-kill $trace_open_close_pid
+kill $trace_openat_pid
+kill $trace_close_pid
 kill $trace_mmap_pid
 kill $trace_cpu_pid
 kill $trace_gpu_pid
 
 # Copy the application log to the results directory
 cp "/mlcommons_training/image_segmentation/pytorch/results/unet3d.log" $output_dir
+
+# Archive the traces and copy them to discs server
+ts=$(date +'%Y%m%d%H%M%S')
+tar zcvf "results/traces_${ts}.tar.gz" $output_dir
+
+./send_to_discs.sh "results/traces_${ts}.tar.gz" /data/MLIO/aws_exp_results
+
+rm -rf $output_dir/*
+
 
 exit 0

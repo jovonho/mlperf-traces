@@ -40,15 +40,14 @@ tracepoint:syscalls:sys_exit_mkdir
 	$now = nsecs;
 	$latency = $now - @mkdir_start[tid];
 
-	printf("%-17lu ", $now);
-	time("%H:%M:%S ");
-	printf("%-6d %-6d ", pid, tid);
-
-	printf("%-10s %-8hu %-8d %s\n",
+	printf("%-17lu %-6d %-10s %-8hu %-8d %s\n",
+		$now, 
+		pid,
 		"mkdir()", 
 		@mkdir_mode[tid],
 		$latency, 
-		@mkdir_path[tid]);
+		@mkdir_path[tid]
+	);
 
 	delete(@mkdir_start[tid]);
 	delete(@mkdir_path[tid]);
@@ -74,14 +73,13 @@ tracepoint:syscalls:sys_exit_rmdir
 	$now = nsecs;
 	$latency = $now - @rmdir_start[tid];
 
-	printf("%lu ", $now);
-	time("%H:%M:%S  ");
-	printf("%-6d %-6d", pid, tid);
-
-	printf("%-10s %-8d %s\n",
+	printf("%-17lu %-6d %-10s %-8d %s\n",
+		$now, 
+		pid, 
 		"rmdir()", 
 		$latency, 
-		@rmdir_path[tid]);
+		@rmdir_path[tid]
+	);
 
 	delete(@rmdir_start[tid]);
 	delete(@rmdir_path[tid]);
@@ -115,11 +113,9 @@ tracepoint:syscalls:sys_enter_unlink
 	$now = nsecs;
 	$latency = $now - @unlnk_start[tid];
 
-	printf("%-17lu ", $now);
-	time("%H:%M:%S ");
-	printf("%-6d %-6d" , pid, tid);
-
-	printf("%-10s %-8d %s %s\n", 
+	printf("%-17lu %-6d %-10s %-8d %s %s\n", 
+		$now, 
+		pid,
 		"unlink()", 
 		$latency,
 		@unlnk_filename[tid],
@@ -142,14 +138,14 @@ tracepoint:syscalls:sys_enter_unlink
 tracepoint:syscalls:sys_enter_creat
 / comm == "python" /
 {
-	printf("%lu ", nsecs);
-	time("%H:%M:%S  ");
-	printf("%-6d %-6d", pid, tid);
-
-	printf("%-10s %-5hu %s\n", 
+	printf("%-17lu %-6d %-6d %-10s %-5hu %s\n", 
+		$now, 
+		pid, 
+		tid,
 		"create()", 
 		args->mode, 
-		str(args->pathname));
+		str(args->pathname)
+	);
 }
 // //int vfs_create(struct user_namespace *mnt_userns, struct inode *dir,
 // //	       struct dentry *dentry, umode_t mode, bool want_excl)

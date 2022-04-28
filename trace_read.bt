@@ -8,7 +8,7 @@
 
 BEGIN
 {
-	printf("%-17s %-6s %-4s %-10s %-10s %s\n", "TIMESTAMP", "TID", "FD", "RET (B)", "LAT(ns)", "FILENAME");
+	printf("%-17s %-6s %-4s %-10s %-10s %s\n", "TIMESTAMP", "PID", "FD", "RET (B)", "LAT(ns)", "FILENAME");
 }
 
 
@@ -26,7 +26,6 @@ BEGIN
 tracepoint:syscalls:sys_enter_read
 / comm == "python" /
 {
-	@[pid, tid] = count();		// Keep track of PID - TID mapping
 	@read_start[tid] = nsecs;
 	@read_fd[tid] = args->fd; 
 	@requested[tid] = args->count;
@@ -51,7 +50,7 @@ tracepoint:syscalls:sys_exit_read
 
 	printf("%-17lu %-6d %-4d %-10d %-10d %s\n", 
 		$now,
-		tid,
+		pid,
 		@read_fd[tid],
 		args->ret, 			// number of bytes returned
 		$latency, 
@@ -79,7 +78,4 @@ END
 	clear(@offset);
 	clear(@requested);
 	clear(@filename);
-
-	print(@);
-	clear(@);
 }

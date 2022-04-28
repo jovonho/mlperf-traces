@@ -3,19 +3,12 @@
 #include <linux/blkdev.h>
 
 /*
- * biosnoop.bt   Block I/O tracing tool, showing per I/O latency.
- *               For Linux, uses bpftrace, eBPF.
- *
- * TODO: switch to block tracepoints. Add device, offset, and size columns.
- *
- * This is a bpftrace version of the bcc tool of the same name.
- *
- * 15-Nov-2017	Brendan Gregg	Created this.
+ * Adaptation of biosnoop.bt by Brendan Gregg
  */
 
 BEGIN
 {
-	printf("%-17s %-9s %-8s %-14s %-8s %-14s ", "TIMESTAMP", "TIME", "PID", "COMM", "DONEPID", "DONECOMM");
+	printf("%-17s %-8s %-14s %-8s %-14s ", "TIMESTAMP", "PID", "COMM", "DONEPID", "DONECOMM");
 	printf("%-4s %-1s %-16s %-12s %s\n", "DISK", "T", "SECTOR", "BYTES", "LAT(ns)");
 }
 
@@ -36,11 +29,8 @@ kprobe:blk_account_io_done
 {
 	$now = nsecs;
 	
-	printf("%-17lu ", $now);
-	
-	time("%H:%M:%S  ");
-
-	printf("%-8d %-14s %-8d %-14s %-4s ",	    
+	printf("%-17lu %-8d %-14s %-8d %-14s %-4s ",	
+		$now,    
 		@iopid[arg0], 
 		@iocomm[arg0], 
 		pid,
