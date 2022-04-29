@@ -18,12 +18,12 @@ fi
 output_dir=$1
 num_gpus=$2
 
-exp_name=$(date +'%Y%m%d%H%M%S')
-
 if [ $# -eq 3 ]
 then	
-	exp_name="${exp_name}_${3}"
+	exp_name="${3}"
 fi
+
+exp_name="${exp_name}_$(date +'%Y%m%d%H%M%S')"
 
 output_dir="${output_dir}/${exp_name}/"
 
