@@ -47,10 +47,10 @@ then
 fi
 
 # Delete previous checkpoint file(s) if it (they) exists
-if [ -f "/mlcommons_training/image_segmentation/pytorch/ckpts/ckpt_*" ]
+if [ "$(ls /mlcommons_training/image_segmentation/pytorch/ckpts)" ]
 then
 	echo "Deleting old checkpoint files"
-	rm "/mlcommons_training/image_segmentation/pytorch/ckpts/ckpt_*"
+	rm "/mlcommons_training/image_segmentation/pytorch/ckpts/*"
 fi
 
 # Clean-up from a previous session if needed
@@ -159,8 +159,9 @@ done
 
 # Copy the application log to the results directory
 cp "/mlcommons_training/image_segmentation/pytorch/results/unet3d.log" $output_dir
+
 # Copy the ckpt file to the results directory
-cp "/mlcommons_training/image_segmentation/pytorch/ckpts/ckpt_*" $output_dir
+cp /mlcommons_training/image_segmentation/pytorch/ckpts/ckpt_* $output_dir
 
 # Archive the traces and copy them to discs server
 tar zcvf "/results/traces_${exp_name}.tar.gz" $output_dir
