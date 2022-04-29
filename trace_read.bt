@@ -8,7 +8,7 @@
 
 BEGIN
 {
-	printf("%-17s %-6s %-4s %-10s %-10s %s\n", "TIMESTAMP", "PID", "FD", "RET (B)", "LAT(ns)", "FILENAME");
+	printf("%-17s %-6s %-4s %-12s %-12s %s\n", "TIMESTAMP", "PID", "FD", "RET (B)", "LAT(ns)", "FILENAME");
 }
 
 
@@ -48,7 +48,7 @@ tracepoint:syscalls:sys_exit_read
 	$now = nsecs;
 	$latency = $now - @read_start[tid];
 
-	printf("%-17lu %-6d %-4d %-10d %-10d %s\n", 
+	printf("%-17lu %-6d %-4d %-12ld %-12ld %s\n", 
 		$now,
 		pid,
 		@read_fd[tid],
