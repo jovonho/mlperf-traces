@@ -37,11 +37,20 @@ fi
 sync
 echo 3 > /proc/sys/vm/drop_caches
 
+sleep 5
+
 # Delete previous app log if it exists
 if [ -f "/mlcommons_training/image_segmentation/pytorch/results/unet3d.log" ]
 then
 	echo "Deleting old app log"
 	rm "/mlcommons_training/image_segmentation/pytorch/results/unet3d.log"
+fi
+
+# Delete previous checkpoint file(s) if it (they) exists
+if [ -f "/mlcommons_training/image_segmentation/pytorch/ckpts/ckpt_*" ]
+then
+	echo "Deleting old checkpoint files"
+	rm "/mlcommons_training/image_segmentation/pytorch/ckpts/ckpt_*"
 fi
 
 # Clean-up from a previous session if needed
@@ -61,8 +70,8 @@ trace_read_pid=$!
 bpftrace trace_write.bt -o ${output_dir}/trace_write.out &
 trace_write_pid=$!
 
-bpftrace trace_read_addr.bt -o ${output_dir}/trace_read_addr.out &
-trace_read_addr_pid=$!
+# bpftrace trace_read_addr.bt -o ${output_dir}/trace_read_addr.out &
+# trace_read_addr_pid=$!
 
 bpftrace trace_create_del.bt -o ${output_dir}/trace_create_del.out &
 trace_create_del_pid=$!
@@ -132,7 +141,7 @@ done
 ./kill_training.sh
 kill $trace_bio_pid
 kill $trace_read_pid
-kill $trace_read_addr_pid
+# kill $trace_read_addr_pid
 kill $trace_write_pid
 kill $trace_create_del_pid
 kill $trace_openat_pid
@@ -150,6 +159,8 @@ done
 
 # Copy the application log to the results directory
 cp "/mlcommons_training/image_segmentation/pytorch/results/unet3d.log" $output_dir
+# Copy the ckpt file to the results directory
+cp "/mlcommons_training/image_segmentation/pytorch/ckpts/ckpt_*" $output_dir
 
 # Archive the traces and copy them to discs server
 tar zcvf "/results/traces_${exp_name}.tar.gz" $output_dir
