@@ -6,16 +6,13 @@
 BEGIN
 {
 	printf("mkdir():\n");
-	printf("%-17s %-8s %-6s %-6s %-10s %-8s", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION", "MODE");
-	printf("%-8s %s\n", "LAT(ns)", "FILENAME");
+	printf("%-17s %-6s %-10s %-8s %-8s %s\n", "TIMESTAMP", "PID", "FUNCTION", "MODE", "LAT(ns)", "FILENAME");
 
 	printf("rmdir():\n");
-	printf("%-17s %-8s %-6s %-6s %-10s", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION");
-	printf("%-8s %s\n", "LAT(ns)", "FILENAME");
+	printf("%-17s %-6s %-10s %-8s %s\n", "TIMESTAMP", "PID", "FUNCTION", "LAT(ns)", "FILENAME");
 
 	printf("unlink():\n");
-	printf("%-15s %-10s %-6s %-6s %-10s ", "TIMESTAMP", "TIME", "PID", "TID", "FUNCTION");
-	printf("%-8s %s %s\n", "LAT(ns)", "FILENAME", "FULLPATH");
+	printf("%-15s %-6s %-10s %-8s %s %s\n", "TIMESTAMP", "PID", "FUNCTION", "LAT(ns)", "FILENAME", "FULLPATH");
 }
 
 // ************************************************************
