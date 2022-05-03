@@ -6,10 +6,10 @@
 BEGIN
 {
 	printf("mmap():\n");
-	printf("%-17s %-6s %-4s %-13s %-8s %s\n", "TIMESTAMP", "TID", "FD", "ADDRESS", "LAT(ns)", "FILENAME");
+	printf("%-17s %-6s %-4s %-13s %-8s %s\n", "TIMESTAMP", "PID", "FD", "ADDRESS", "LAT(ns)", "FILENAME");
 
 	printf("munmap():\n");
-	printf("%-17s %-6s %-13s %-8s %-8s\n", "TIMESTAMP", "TID", "ADDRESS", "LEN", "LAT(ns)");
+	printf("%-17s %-6s %-13s %-8s %-8s\n", "TIMESTAMP", "PID", "ADDRESS", "LEN", "LAT(ns)");
 }
 
 // ************************************************************
