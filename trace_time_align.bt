@@ -1,0 +1,20 @@
+#!/usr/local/bin/bpftrace
+
+
+BEGIN
+{
+	printf("%-15s %-8s\n", "TIMESTAMP", "TIME");
+}
+
+// ************************************************************
+// 	TIME ALIGNMENT
+//	Simply prints out the nsecs timestamp followed by the local time
+// 	to later be able to align the tmiestamp to a given time.
+// ************************************************************
+
+tracepoint:syscalls:sys_enter_*,
+kprobe:blk_account_io_start
+{
+	printf("%-17lu ", nsecs);
+	time("%H:%M:%S\n");
+}
