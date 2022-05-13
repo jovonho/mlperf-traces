@@ -136,6 +136,9 @@ while kill -0 "$root_pid"; do
 	sleep 5
 done
 
+# Sleep a bit more once training stops to capture full shutting down
+sleep 10
+
 # Kill the training process and the traces
 # Strace was stopped when root_pid ended
 ./kill_training.sh
