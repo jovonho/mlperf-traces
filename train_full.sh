@@ -117,7 +117,7 @@ done
 
 # Attach the syscall trace to the root_process 
 # It will automatically attach to all spawned child processes
-strace -T -ttt -f -p $root_pid -e 'trace=!ioctl,clock_gettime,sched_yield,nanosleep,sched_getaffinity,sched_setaffinity,futex,set_robust_list' -o ${output_dir}/strace.out &
+#strace -T -ttt -f -p $root_pid -e 'trace=!ioctl,clock_gettime,sched_yield,nanosleep,sched_getaffinity,sched_setaffinity,futex,set_robust_list' -o ${output_dir}/strace.out &
 
 # Sleep a bit to let training spawn all workers
 sleep 120
@@ -161,7 +161,7 @@ do
 done
 
 # Copy the application log to the results directory
-cp "/mlcommons_training/image_segmentation/pytorch/results/unet3d.log" $output_dir
+cp /mlcommons_training/image_segmentation/pytorch/results/unet3d.log $output_dir
 
 # Copy the ckpt file to the results directory
 cp /mlcommons_training/image_segmentation/pytorch/ckpts/ckpt_* $output_dir
@@ -169,7 +169,7 @@ cp /mlcommons_training/image_segmentation/pytorch/ckpts/ckpt_* $output_dir
 # Archive the traces and copy them to discs server
 tar zcvf "/results/traces_${exp_name}.tar.gz" $output_dir
 
-./send_to_discs.sh "/results/traces_${exp_name}.tar.gz" /data/MLIO/aws_exp_results
+#./send_to_discs.sh "/results/traces_${exp_name}.tar.gz" /data/MLIO/aws_exp_results
 
 # rm -rf $output_dir/*
 
