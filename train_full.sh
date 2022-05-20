@@ -40,10 +40,10 @@ echo 3 > /proc/sys/vm/drop_caches
 sleep 5
 
 # Delete previous app log if it exists
-if [ -f "/mlcommons_training/image_segmentation/pytorch/results/unet3d.log" ]
+if [ "$(ls /mlcommons_training/image_segmentation/pytorch/results)" ]
 then
-	echo "Deleting old app log"
-	rm /mlcommons_training/image_segmentation/pytorch/results/unet3d.log
+	echo "Deleting old app log and casefile logs"
+	rm /mlcommons_training/image_segmentation/pytorch/results/*
 fi
 
 # Delete previous checkpoint file(s) if it (they) exists
@@ -160,8 +160,8 @@ do
 	kill $proc
 done
 
-# Copy the application log to the results directory
-cp /mlcommons_training/image_segmentation/pytorch/results/unet3d.log $output_dir
+# Copy the application log and casefile logs to the results directory
+cp /mlcommons_training/image_segmentation/pytorch/results/* $output_dir
 
 # Copy the ckpt file to the results directory
 cp /mlcommons_training/image_segmentation/pytorch/ckpts/ckpt_* $output_dir
