@@ -20,7 +20,6 @@ kprobe:blk_account_io_start
 	@iocomm[arg0] = comm;
 	@disk[arg0] = ((struct request *)arg0)->rq_disk->disk_name;
 	@rw[arg0] = (((struct request *)arg0)->cmd_flags & 255) == 1 ? "W" : "R";
-	// @sector[arg0] = ((struct request *)arg0)->__sector;
 	@len[arg0] =  ((struct request *)arg0)->__data_len;
 }
 
@@ -45,7 +44,6 @@ kprobe:blk_account_io_done
 	delete(@iocomm[arg0]);
 	delete(@disk[arg0]);
 	delete(@rw[arg0]);
-	// delete(@sector[arg0]);
 	delete(@len[arg0]);
 }
 
@@ -56,6 +54,5 @@ END
 	clear(@iocomm);
 	clear(@disk);
 	clear(@rw);
-	clear(@sector);
 	clear(@len);
 }
